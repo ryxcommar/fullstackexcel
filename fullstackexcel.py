@@ -1,11 +1,11 @@
 import os
+import re
 from typing import Dict
 from typing import List
 
 import pandas as pd
 import click
 
-from functools import partial
 from flask import Flask
 from flask.cli import FlaskGroup
 from flask.cli import run_command
@@ -23,20 +23,20 @@ def create_html_from_sheet(excel_file: str, sheet_name: str) -> str:
     return '\n'.join(list(df_html.sum(axis=1)))
 
 
+def create_routing_func(excel_file: str, sheet_name: str) -> callable:
+    _f = lambda: create_html_from_sheet(excel_file, sheet_name)
+    _f.__name__ = re.sub(r'\W+', '', sheet_name.lower())
+    return _f
+
+
 def create_app(excel_file: str = None) -> Flask:
     app = Flask(__name__)
     excel_file = excel_file or os.environ.get('EXCEL_SHEET')
 
     if excel_file:
         for routing_rule in get_routes_from_wb(excel_file):
-            def _f():
-                return partial(
-                    create_html_from_sheet,
-                    excel_file=excel_file,
-                    sheet_name=routing_rule['sheet_name']
-                )()
-            _f.__name__ = routing_rule['sheet_name']
-            app.route(routing_rule['route'])(_f)
+            f = create_routing_func(excel_file, routing_rule['sheet_name'])
+            app.route(routing_rule['route'])(f)
 
     return app
 
@@ -66,7 +66,7 @@ def create_demo():
             'index': False
         }
 
-        routes = [['/', 'hello_world']]
+        routes = [['/', 'hello_world'], ['/foo', 'foo']]
         pd.DataFrame(routes).to_excel(sheet_name='!routes', **kwargs)
 
         hello_world_page = [
@@ -75,3 +75,10 @@ def create_demo():
             ['<i>', 'hello, world!', '</i>']
         ]
         pd.DataFrame(hello_world_page).to_excel(sheet_name='hello_world', **kwargs)
+
+        foo_page = [
+            ['<head>', '<title>full stack with excel</title>', None],
+            ['</head>', None, None],
+            ['<b>', 'bar', '</b>']
+        ]
+        pd.DataFrame(foo_page).to_excel(sheet_name='foo', **kwargs)
