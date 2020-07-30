@@ -5,6 +5,7 @@ from typing import List
 import pandas as pd
 import click
 
+from functools import partial
 from flask import Flask
 from flask.cli import FlaskGroup
 from flask.cli import run_command
@@ -29,7 +30,11 @@ def create_app(excel_file: str = None) -> Flask:
     if excel_file:
         for routing_rule in get_routes_from_wb(excel_file):
             def _f():
-                return create_html_from_sheet(excel_file, routing_rule['sheet_name'])
+                return partial(
+                    create_html_from_sheet,
+                    excel_file=excel_file,
+                    sheet_name=routing_rule['sheet_name']
+                )()
             _f.__name__ = routing_rule['sheet_name']
             app.route(routing_rule['route'])(_f)
 
