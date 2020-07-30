@@ -13,6 +13,8 @@ from flask.cli import run_command
 
 from jinja2 import DictLoader
 
+from markupsafe import Markup
+
 
 def get_routes_from_wb(excel_file: str) -> List[Dict[str, str]]:
     routes = pd.read_excel(excel_file, sheet_name='!routes', header=None)
@@ -45,7 +47,7 @@ def create_routing_func(excel_file: str, sheet_name: str) -> callable:
 
 def render_sheet(sheet_name: str):
     df = pd.read_excel(current_app.config['EXCEL_FILE'], sheet_name=sheet_name)
-    return df.to_html(index=None, escape=False)
+    return Markup(df.to_html(index=None, escape=False))
 
 
 def create_jinja_env(app: Flask, excel_file: str):
@@ -135,7 +137,7 @@ def create_demo():
             ['{% block content %}', None],
             [None, "<h3>My friends' Pets</h3>"],
             [None, '<br \>'],
-            [None, '{{ render_sheet("&actual_table") | safe }}'],
+            [None, '{{ render_sheet("&actual_table") }}'],
             ['{% endblock %}', None]
         ]
         pd.DataFrame(foo_page).to_excel(sheet_name='foo', **kwargs)
