@@ -43,17 +43,24 @@ def create_routing_func(excel_file: str, sheet_name: str) -> callable:
     return _f
 
 
+def render_sheet(sheet_name: str):
+    df = pd.read_excel(current_app.config['EXCEL_FILE'], sheet_name=sheet_name)
+    return df.to_html(index=None, escape=False)
+
+
 def create_jinja_env(app: Flask, excel_file: str):
     templates = get_templates_from_wb(excel_file)
     app.jinja_env.loader = DictLoader({
         template: get_html_from_sheet(excel_file, template)
         for template in templates
     })
+    app.jinja_env.globals.update(render_sheet=render_sheet)
 
 
 def create_app(excel_file: str = None) -> Flask:
     app = Flask(__name__)
-    excel_file = excel_file or os.environ.get('EXCEL_SHEET')
+    excel_file = excel_file or os.environ.get('EXCEL_FILE')
+    app.config['EXCEL_FILE'] = excel_file
 
     if excel_file:
         for routing_rule in get_routes_from_wb(excel_file):
@@ -71,12 +78,12 @@ def cli():
 
 
 @cli.command('run-excel')
-@click.argument('excel_sheet')
+@click.argument('excel_file')
 @click.pass_context
-def run_excel(ctx, excel_sheet):
-    click.echo(f'Deploying {excel_sheet}')
-    os.environ['FLASK_APP'] = f"{__name__}:create_app('{excel_sheet}')"
-    os.environ['EXCEL_SHEET'] = excel_sheet
+def run_excel(ctx, excel_file):
+    click.echo(f'Deploying {excel_file}')
+    os.environ['FLASK_APP'] = f"{__name__}:create_app('{excel_file}')"
+    os.environ['EXCEL_FILE'] = excel_file
     ctx.invoke(run_command, reload=True)
 
 
@@ -109,14 +116,26 @@ def create_demo():
             ['{% extends "example_template" %}', None, None],
             ['{% block content %}', None, None],
             ['<b>', 'hello, world!', '</b>'],
+            ['<br />', '<br />', None],
+            ['<a href="/foo">', 'See some data?', '</a>'],
             ['{% endblock %}', None, None]
         ]
         pd.DataFrame(hello_world_page).to_excel(sheet_name='hello_world', **kwargs)
 
+        actual_table = [
+            ['Name', 'Number of pets'],
+            ['Bob', 4],
+            ['Mary', 2],
+            ['Joe', 0]
+        ]
+        pd.DataFrame(actual_table).to_excel(sheet_name='&actual_table', **kwargs)
+
         foo_page = [
-            ['<head>', None, None],
-            [None, '<title>full stack with excel</title>', None],
-            ['</head>', None, None],
-            ['<i>', 'bar', '</i>']
+            ['{% extends "example_template" %}', None],
+            ['{% block content %}', None],
+            [None, "<h3>My friends' Pets</h3>"],
+            [None, '<br \>'],
+            [None, '{{ render_sheet("&actual_table") | safe }}'],
+            ['{% endblock %}', None]
         ]
         pd.DataFrame(foo_page).to_excel(sheet_name='foo', **kwargs)
