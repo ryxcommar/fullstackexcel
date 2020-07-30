@@ -72,13 +72,14 @@ def create_demo():
         hello_world_page = [
             ['<head>', '<title>full stack with excel</title>', None],
             ['</head>', None, None],
-            ['<i>', 'hello, world!', '</i>']
+            ['<b>', 'hello, world!', '</b>']
         ]
         pd.DataFrame(hello_world_page).to_excel(sheet_name='hello_world', **kwargs)
 
         foo_page = [
-            ['<head>', '<title>full stack with excel</title>', None],
+            ['<head>', None, None],
+            [None, '<title>full stack with excel</title>', None],
             ['</head>', None, None],
-            ['<b>', 'bar', '</b>']
+            ['<i>', 'bar', '</i>']
         ]
         pd.DataFrame(foo_page).to_excel(sheet_name='foo', **kwargs)
