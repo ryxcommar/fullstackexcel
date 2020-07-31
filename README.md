@@ -6,7 +6,7 @@ FSE currently supports:
 
 - **The Flask blueprint pattern**: defined using a special `!blueprints` sheet that treats external Excel files as Flask blueprints).
 - **Jinja2 templating**: template "files" are just worksheets defined in a special `!templates` sheet).
-- **Massive scalability**: Each blueprint or base Excel file [supports](https://support.microsoft.com/en-us/office/excel-specifications-and-limits-1672b34d-7043-467e-8e27-269d656771c3) 1,048,576 rows, which means this is the maximum number of endpoints+rules you can define in the `!routes` worksheet. That' a lot of routes!
+- **Massive scalability**: Excel [supports](https://support.microsoft.com/en-us/office/excel-specifications-and-limits-1672b34d-7043-467e-8e27-269d656771c3) 1,048,576 rows, which means this is the maximum number of endpoints + rules you can define in the `!routes` worksheet of any base app file or blueprint file. That' a lot of routes!
 
 FSE requires Python 3.6+. Although FSE is built in Python, your website won't need to be. Everything you do to define your website's behavior can be done in Excel alone.
 
