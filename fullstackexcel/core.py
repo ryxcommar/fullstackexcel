@@ -10,6 +10,7 @@ from flask.cli import run_command
 from .routing import register_blueprints
 from .routing import register_routes_to_pbo
 from .jinja_env import create_jinja_env
+from .utils.excel import sheets_in_workbook
 
 
 def create_app(excel_file: str = None) -> Flask:
@@ -18,8 +19,11 @@ def create_app(excel_file: str = None) -> Flask:
     app.config['EXCEL_FILE'] = excel_file
 
     if excel_file:
-        register_blueprints(app, excel_file)
-        register_routes_to_pbo(app, excel_file)
+        sheets = sheets_in_workbook(excel_file)
+        if '!blueprints' in sheets:
+            register_blueprints(app, excel_file)
+        if '!routes' in sheets:
+            register_routes_to_pbo(app, excel_file)
         create_jinja_env(app, excel_file)
 
     return app

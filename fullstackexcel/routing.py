@@ -10,6 +10,7 @@ from flask import Flask
 from flask import Blueprint
 
 from .rendering import render_html_from_sheet
+from .utils.excel import sheets_in_workbook
 
 
 def create_blueprint(blueprint_excel_file: str):
@@ -26,6 +27,8 @@ def register_blueprints(app: Flask, excel_file: str):
 
 
 def get_routes_from_wb(excel_file: str) -> List[Dict[str, str]]:
+    if '!routes' not in sheets_in_workbook(excel_file):
+        return []
     routes = pd.read_excel(excel_file, sheet_name='!routes', header=None)
     routes = routes.rename(columns={0: 'route', 1: 'sheet_name'})
     return routes.to_dict(orient='records')

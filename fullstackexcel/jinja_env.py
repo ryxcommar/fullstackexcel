@@ -1,3 +1,5 @@
+from typing import List
+
 import pandas as pd
 
 from flask import Flask
@@ -7,8 +9,15 @@ from jinja2 import DictLoader
 
 from markupsafe import Markup
 
-from .rendering import get_templates_from_wb
 from .rendering import get_html_from_sheet
+from .utils.excel import sheets_in_workbook
+
+
+def get_templates_from_wb(excel_file: str) -> List[str]:
+    if '!templates' not in sheets_in_workbook(excel_file):
+        return []
+    templates = pd.read_excel(excel_file, sheet_name='!templates', header=None)
+    return list(templates[0])
 
 
 def render_sheet(sheet_name: str):
