@@ -1,62 +1,15 @@
 import os
-import re
-from typing import Dict
-from typing import List
 
 import pandas as pd
 import click
 
 from flask import Flask
-from flask import current_app
 from flask.cli import FlaskGroup
 from flask.cli import run_command
 
-from jinja2 import DictLoader
-
-from markupsafe import Markup
-
-
-def get_routes_from_wb(excel_file: str) -> List[Dict[str, str]]:
-    routes = pd.read_excel(excel_file, sheet_name='!routes', header=None)
-    routes = routes.rename(columns={0: 'route', 1: 'sheet_name'})
-    return routes.to_dict(orient='records')
-
-
-def get_templates_from_wb(excel_file: str) -> List[str]:
-    templates = pd.read_excel(excel_file, sheet_name='!templates', header=None)
-    return list(templates[0])
-
-
-def get_html_from_sheet(excel_file: str, sheet_name: str) -> str:
-    df_html = pd.read_excel(excel_file, sheet_name=sheet_name, header=None)
-    df_html = df_html.fillna('').astype(str)
-    html = '\n'.join(list(df_html.sum(axis=1)))
-    return html
-
-
-def render_html_from_sheet(excel_file: str, sheet_name: str) -> str:
-    html = get_html_from_sheet(excel_file, sheet_name)
-    return current_app.jinja_env.from_string(html).render()
-
-
-def create_routing_func(excel_file: str, sheet_name: str) -> callable:
-    _f = lambda: render_html_from_sheet(excel_file, sheet_name)
-    _f.__name__ = re.sub(r'\W+', '', sheet_name.lower())
-    return _f
-
-
-def render_sheet(sheet_name: str):
-    df = pd.read_excel(current_app.config['EXCEL_FILE'], sheet_name=sheet_name)
-    return Markup(df.to_html(index=None, escape=False))
-
-
-def create_jinja_env(app: Flask, excel_file: str):
-    templates = get_templates_from_wb(excel_file)
-    app.jinja_env.loader = DictLoader({
-        template: get_html_from_sheet(excel_file, template)
-        for template in templates
-    })
-    app.jinja_env.globals.update(render_sheet=render_sheet)
+from .routing import register_blueprints
+from .routing import register_routes_to_pbo
+from .jinja_env import create_jinja_env
 
 
 def create_app(excel_file: str = None) -> Flask:
@@ -65,10 +18,8 @@ def create_app(excel_file: str = None) -> Flask:
     app.config['EXCEL_FILE'] = excel_file
 
     if excel_file:
-        for routing_rule in get_routes_from_wb(excel_file):
-            f = create_routing_func(excel_file, routing_rule['sheet_name'])
-            app.route(routing_rule['route'])(f)
-
+        register_blueprints(app, excel_file)
+        register_routes_to_pbo(app, excel_file)
         create_jinja_env(app, excel_file)
 
     return app
@@ -104,6 +55,9 @@ def create_demo():
 
         templates = [['example_template']]
         pd.DataFrame(templates).to_excel(sheet_name='!templates', **kwargs)
+
+        templates = [['example_blueprint.xlsx']]
+        pd.DataFrame(templates).to_excel(sheet_name='!blueprints', **kwargs)
 
         example_template = [
             ['<head>', None, None, None],
@@ -141,3 +95,21 @@ def create_demo():
             ['{% endblock %}', None]
         ]
         pd.DataFrame(foo_page).to_excel(sheet_name='foo', **kwargs)
+
+    fn_bp = 'example_blueprint.xlsx'
+    with pd.ExcelWriter(fn_bp, engine='xlsxwriter') as writer:
+        kwargs = {
+            'excel_writer': writer,
+            'header': False,
+            'index': False
+        }
+        routes = [['/bar', 'bar']]
+        pd.DataFrame(routes).to_excel(sheet_name='!routes', **kwargs)
+
+        example_bp_page = [
+            ['{% extends "example_template" %}', None],
+            ['{% block content %}', None],
+            [None, 'This page was created using a blueprint'],
+            ['{% endblock %}', None, None],
+        ]
+        pd.DataFrame(example_bp_page).to_excel(sheet_name='bar', **kwargs)

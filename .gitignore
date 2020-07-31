@@ -1,5 +1,6 @@
 .idea/
 demo_website.xlsx
+example_blueprint.xlsx
 ~*.xlsx
 
 # Byte-compiled / optimized / DLL files
