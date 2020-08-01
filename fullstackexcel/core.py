@@ -19,11 +19,8 @@ def create_app(excel_file: str = None) -> Flask:
     app.config['EXCEL_FILE'] = excel_file
 
     if excel_file:
-        sheets = sheets_in_workbook(excel_file)
-        if '!blueprints' in sheets:
-            register_blueprints(app, excel_file)
-        if '!routes' in sheets:
-            register_routes_to_pbo(app, excel_file)
+        register_blueprints(app, excel_file)
+        register_routes_to_pbo(app, excel_file)
         create_jinja_env(app, excel_file)
 
     return app
@@ -54,14 +51,14 @@ def create_demo():
             'index': False
         }
 
-        routes = [['/', 'hello_world'], ['/foo', 'foo']]
-        pd.DataFrame(routes).to_excel(sheet_name='!routes', **kwargs)
+        routes = [['hello_world', '/'], ['foo', '/foo']]
+        pd.DataFrame(routes).to_excel(sheet_name='#routes', **kwargs)
 
         templates = [['example_template']]
-        pd.DataFrame(templates).to_excel(sheet_name='!templates', **kwargs)
+        pd.DataFrame(templates).to_excel(sheet_name='#templates', **kwargs)
 
         templates = [['example_blueprint.xlsx']]
-        pd.DataFrame(templates).to_excel(sheet_name='!blueprints', **kwargs)
+        pd.DataFrame(templates).to_excel(sheet_name='#blueprints', **kwargs)
 
         example_template = [
             ['<head>', None, None, None],
@@ -107,8 +104,8 @@ def create_demo():
             'header': False,
             'index': False
         }
-        routes = [['/bar', 'bar']]
-        pd.DataFrame(routes).to_excel(sheet_name='!routes', **kwargs)
+        routes = [['bar', '/bar']]
+        pd.DataFrame(routes).to_excel(sheet_name='#routes', **kwargs)
 
         example_bp_page = [
             ['{% extends "example_template" %}', None],

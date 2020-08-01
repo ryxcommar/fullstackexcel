@@ -11,13 +11,13 @@ from markupsafe import Markup
 
 from .rendering import get_html_from_sheet
 from .utils.excel import sheets_in_workbook
+from .utils.excel import load_simple
 
 
 def get_templates_from_wb(excel_file: str) -> List[str]:
-    if '!templates' not in sheets_in_workbook(excel_file):
+    if '#templates' not in sheets_in_workbook(excel_file):
         return []
-    templates = pd.read_excel(excel_file, sheet_name='!templates', header=None)
-    return list(templates[0])
+    return load_simple(excel_file, '#templates', return_type=list)
 
 
 def render_sheet(sheet_name: str):
