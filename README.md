@@ -25,3 +25,5 @@ fullstackexcel run-excel demo_website.xlsx
 ```
 
 Powered by Flask.
+
+**Note: this library is currently in alpha. The API is subject to breakage until this message is removed.**
