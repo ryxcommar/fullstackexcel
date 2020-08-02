@@ -49,7 +49,7 @@ def run_excel(ctx, excel_file, env):
             _excel_file = os.environ['EXCEL_FILE']
         else:
             raise TypeError('Please either define an excel file to load as an '
-                            'argument (recommend), or defile an `EXCEL_FILE` '
+                            'argument (recommended), or defile an `EXCEL_FILE` '
                             'environment variable.')
     elif len(excel_file) == 1:
         _excel_file = excel_file[0]
