@@ -79,7 +79,7 @@ def create_demo():
             ['example_blueprint.xlsx']
         ],
         '#config': [
-            ['SECRET_KEY', 'keep this secret!'],
+            ['SECRET_KEY', '%SECRET_KEY%'],
             ['PREFERRED_URL_SCHEME', 'http']
         ],
         '#config_development': [
