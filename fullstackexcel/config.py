@@ -7,10 +7,12 @@ from .utils.excel import sheets_in_workbook
 from .utils.os import parse_config
 
 
-def get_config_from_excel(excel_file: str, env: str) -> Dict[str, str]:
+def get_config_from_excel(excel_file: str, cfg_name: str) -> Dict[str, str]:
     sheets = sheets_in_workbook(excel_file)
-    if env and f'#config_{env}' in sheets:
-        cfg_sheet = f'#config_{env}'
+    if cfg_name and cfg_name.startswith('#config') and cfg_name in sheets:
+        cfg_sheet = cfg_name
+    elif cfg_name and f'#config_{cfg_name}' in sheets:
+        cfg_sheet = f'#config_{cfg_name}'
     elif '#config' in sheets:
         cfg_sheet = '#config'
     else:
@@ -19,6 +21,8 @@ def get_config_from_excel(excel_file: str, env: str) -> Dict[str, str]:
     return parse_config(d)
 
 
-def update_config(app: Flask, excel_file: str):
-    user_cfg = get_config_from_excel(excel_file, app.env)
+def update_config(app: Flask, excel_file: str, config_name: str = None):
+    user_cfg = get_config_from_excel(excel_file, config_name or app.env)
+    if 'INHERIT_FROM' in user_cfg:
+        update_config(app, excel_file, user_cfg['INHERIT_FROM'])
     app.config.update(user_cfg)

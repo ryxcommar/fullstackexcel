@@ -68,6 +68,18 @@ def create_demo():
         templates = [['example_blueprint.xlsx']]
         pd.DataFrame(templates).to_excel(sheet_name='#blueprints', **kwargs)
 
+        templates = [
+            ['SECRET_KEY', 'keep this secret!'],
+            ['PREFERRED_URL_SCHEME', 'https']
+        ]
+        pd.DataFrame(templates).to_excel(sheet_name='#config', **kwargs)
+
+        templates = [
+            ['INHERIT_FROM', '#config'],
+            ['TESTING', True]
+        ]
+        pd.DataFrame(templates).to_excel(sheet_name='#config_testing', **kwargs)
+
         example_template = [
             ['<head>', None, None, None],
             [None, '<title>', 'Fullstack with Excel', '</title>'],

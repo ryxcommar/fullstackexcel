@@ -10,11 +10,14 @@ def parse_config_val(s: str) -> str:
     bash users!) If the value is not wrapped in percent signs, simply return
     the value that was input.
     """
-    regex = re.match('^%(.*?)%$', s)
-    if regex:
-        return os.getenv(regex[1])
+    try:
+        regex = re.match('^%(.*?)%$', s)
+    except TypeError:
+        pass
     else:
-        return s
+        if regex:
+            return os.getenv(regex[1])
+    return s
 
 
 def parse_config(d: dict) -> dict:
