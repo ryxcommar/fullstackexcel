@@ -45,9 +45,9 @@ def cli():
 def run_excel(ctx, excel_file, env):
     """Deploy your Excel file as a website."""
     if len(excel_file) == 0:
-        try:
+        if 'EXCEL_FILE' in os.environ:
             _excel_file = os.environ['EXCEL_FILE']
-        except KeyError:
+        else:
             raise TypeError('Please either define an excel file to load as an '
                             'argument (recommend), or defile an `EXCEL_FILE` '
                             'environment variable.')
@@ -56,7 +56,7 @@ def run_excel(ctx, excel_file, env):
     else:
         raise TypeError("You cannot submit more than 1 Excel file. If you'd "
                         'like to support multiple Excel files, create a '
-                        '`#blueprint` sheet.')
+                        '`#blueprints` sheet.')
     click.echo(f'Deploying {_excel_file}')
     os.environ['FLASK_APP'] = f"{__name__}:create_app('{_excel_file}')"
     os.environ['EXCEL_FILE'] = _excel_file
