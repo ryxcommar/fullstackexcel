@@ -15,3 +15,7 @@ def parse_config_val(s: str) -> str:
         return os.getenv(regex[1])
     else:
         return s
+
+
+def parse_config(d: dict) -> dict:
+    return {k: parse_config_val(v) for k, v in d.items()}

@@ -1,0 +1,9 @@
+click==7.1.2
+Flask==1.1.2
+Jinja2==2.11.2
+MarkupSafe==1.1.1
+openpyxl==3.0.4
+pandas==1.1.0
+Sphinx==3.1.2
+xlrd==1.2.0
+XlsxWriter==1.3.0

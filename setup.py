@@ -7,7 +7,7 @@ setup(
     author='@ryxcommar',
     url='https://twitter.com/ryxcommar',
     entry_points={
-        'console_scripts': ['fullstackexcel=fullstackexcel:cli']
+        'console_scripts': ['fse=fullstackexcel:cli']
     },
     install_requires=['flask', 'pandas', 'xlrd', 'xlsxwriter']
 )

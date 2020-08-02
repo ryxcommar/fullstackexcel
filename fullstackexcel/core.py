@@ -7,10 +7,10 @@ from flask import Flask
 from flask.cli import FlaskGroup
 from flask.cli import run_command
 
+from .config import update_config
 from .routing import register_blueprints
 from .routing import register_routes_to_pbo
 from .jinja_env import create_jinja_env
-from .utils.excel import sheets_in_workbook
 
 
 def create_app(excel_file: str = None) -> Flask:
@@ -19,6 +19,7 @@ def create_app(excel_file: str = None) -> Flask:
     app.config['EXCEL_FILE'] = excel_file
 
     if excel_file:
+        update_config(app, excel_file)
         register_blueprints(app, excel_file)
         register_routes_to_pbo(app, excel_file)
         create_jinja_env(app, excel_file)
@@ -33,11 +34,18 @@ def cli():
 
 @cli.command('run-excel')
 @click.argument('excel_file')
+@click.option('--env', '-e',
+              default=lambda: os.getenv('FSE_ENV', 'production'),
+              help='Your config environment. Different config environments are '
+                   'managed using #config_{env} sheets. `development` and '
+                   '`production` are always valid configs by default.')
 @click.pass_context
-def run_excel(ctx, excel_file):
+def run_excel(ctx, excel_file, env):
+    """Deploy your Excel file as a website."""
     click.echo(f'Deploying {excel_file}')
     os.environ['FLASK_APP'] = f"{__name__}:create_app('{excel_file}')"
     os.environ['EXCEL_FILE'] = excel_file
+    os.environ['FLASK_ENV'] = env
     ctx.invoke(run_command, reload=True)
 
 

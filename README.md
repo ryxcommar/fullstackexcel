@@ -20,8 +20,8 @@ https://twitter.com/ryxcommar/status/1288620264725663744?s=20
 git clone https://github.com/ryxcommar/fullstackexcel.git
 cd fullstackexcel
 pip install -e .
-fullstackexcel create-demo
-fullstackexcel run-excel demo_website.xlsx
+fse create-demo
+fse run-excel demo_website.xlsx
 ```
 
 Powered by Flask.
