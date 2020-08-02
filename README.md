@@ -21,7 +21,7 @@ git clone https://github.com/ryxcommar/fullstackexcel.git
 cd fullstackexcel
 pip install -e .
 fse create-demo
-fse run-excel demo_website.xlsx
+fse run-excel --env development demo_website.xlsx
 ```
 
 Powered by Flask.

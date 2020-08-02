@@ -70,15 +70,16 @@ def create_demo():
 
         templates = [
             ['SECRET_KEY', 'keep this secret!'],
-            ['PREFERRED_URL_SCHEME', 'https']
+            ['PREFERRED_URL_SCHEME', 'http']
         ]
         pd.DataFrame(templates).to_excel(sheet_name='#config', **kwargs)
 
         templates = [
             ['INHERIT_FROM', '#config'],
-            ['TESTING', True]
+            ['TESTING', True],
+            ['DEBUG', True]
         ]
-        pd.DataFrame(templates).to_excel(sheet_name='#config_testing', **kwargs)
+        pd.DataFrame(templates).to_excel(sheet_name='#config_development', **kwargs)
 
         example_template = [
             ['<head>', None, None, None],
