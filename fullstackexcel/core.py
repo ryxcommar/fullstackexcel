@@ -12,6 +12,8 @@ from .routing import register_blueprints
 from .routing import register_routes_to_pbo
 from .jinja_env import create_jinja_env
 
+from .utils.excel import build_workbook_from_dict
+
 
 def create_app(excel_file: str = None) -> Flask:
     app = Flask(__name__)
@@ -32,8 +34,8 @@ def cli():
     pass
 
 
-@cli.command('run-excel')
-@click.argument('excel_file')
+@cli.command('run-excel', context_settings={'ignore_unknown_options': True})
+@click.argument('excel_file', nargs=-1, type=click.Path())
 @click.option('--env', '-e',
               default=lambda: os.getenv('FSE_ENV', 'production'),
               help='Your config environment. Different config environments are '
@@ -42,96 +44,94 @@ def cli():
 @click.pass_context
 def run_excel(ctx, excel_file, env):
     """Deploy your Excel file as a website."""
-    click.echo(f'Deploying {excel_file}')
-    os.environ['FLASK_APP'] = f"{__name__}:create_app('{excel_file}')"
-    os.environ['EXCEL_FILE'] = excel_file
+    if len(excel_file) == 0:
+        try:
+            _excel_file = os.environ['EXCEL_FILE']
+        except KeyError:
+            raise TypeError('Please either define an excel file to load as an '
+                            'argument (recommend), or defile an `EXCEL_FILE` '
+                            'environment variable.')
+    elif len(excel_file) == 1:
+        _excel_file = excel_file[0]
+    else:
+        raise TypeError("You cannot submit more than 1 Excel file. If you'd "
+                        'like to support multiple Excel files, create a '
+                        '`#blueprint` sheet.')
+    click.echo(f'Deploying {_excel_file}')
+    os.environ['FLASK_APP'] = f"{__name__}:create_app('{_excel_file}')"
+    os.environ['EXCEL_FILE'] = _excel_file
     os.environ['FLASK_ENV'] = env
     ctx.invoke(run_command, reload=True)
 
 
 @cli.command('create-demo')
 def create_demo():
-    fn = 'demo_website.xlsx'
-    with pd.ExcelWriter(fn, engine='xlsxwriter') as writer:
-        kwargs = {
-            'excel_writer': writer,
-            'header': False,
-            'index': False
-        }
 
-        routes = [['hello_world', '/'], ['foo', '/foo']]
-        pd.DataFrame(routes).to_excel(sheet_name='#routes', **kwargs)
-
-        templates = [['example_template']]
-        pd.DataFrame(templates).to_excel(sheet_name='#templates', **kwargs)
-
-        templates = [['example_blueprint.xlsx']]
-        pd.DataFrame(templates).to_excel(sheet_name='#blueprints', **kwargs)
-
-        templates = [
+    base = {
+        '#routes': [
+            ['hello_world', '/'],
+            ['foo', '/foo']
+        ],
+        '#templates': [
+            ['example_template']
+        ],
+        '#blueprints': [
+            ['example_blueprint.xlsx']
+        ],
+        '#config': [
             ['SECRET_KEY', 'keep this secret!'],
             ['PREFERRED_URL_SCHEME', 'http']
-        ]
-        pd.DataFrame(templates).to_excel(sheet_name='#config', **kwargs)
-
-        templates = [
+        ],
+        '#config_development': [
             ['INHERIT_FROM', '#config'],
             ['TESTING', True],
             ['DEBUG', True]
-        ]
-        pd.DataFrame(templates).to_excel(sheet_name='#config_development', **kwargs)
-
-        example_template = [
+        ],
+        'example_template': [
             ['<head>', None, None, None],
             [None, '<title>', 'Fullstack with Excel', '</title>'],
             ['</head>', None, None, None],
             ['{% block content %}', None, None, None],
             ['{% endblock %}', None, None, None]
-        ]
-        pd.DataFrame(example_template).to_excel(sheet_name='example_template', **kwargs)
-
-        hello_world_page = [
+        ],
+        'hello_world': [
             ['{% extends "example_template" %}', None, None],
             ['{% block content %}', None, None],
             ['<b>', 'hello, world!', '</b>'],
             ['<br />', '<br />', None],
-            ['<a href="/foo">', 'See some data?', '</a>'],
+            ['<a href="{{ url_for(\'foo\') }}">', 'See some data?', '</a>'],
             ['{% endblock %}', None, None]
-        ]
-        pd.DataFrame(hello_world_page).to_excel(sheet_name='hello_world', **kwargs)
-
-        actual_table = [
+        ],
+        '&actual_table': [
             ['Name', 'Number of pets'],
             ['Bob', 4],
             ['Mary', 2],
             ['Joe', 0]
-        ]
-        pd.DataFrame(actual_table).to_excel(sheet_name='&actual_table', **kwargs)
-
-        foo_page = [
+        ],
+        'foo': [
             ['{% extends "example_template" %}', None],
             ['{% block content %}', None],
-            [None, "<h3>My friends' Pets</h3>"],
+            [None, "<h3>My Friends' Pets</h3>"],
             [None, '<br \>'],
             [None, '{{ render_sheet("&actual_table") }}'],
+            [None, '<br \>'],
+            [None, 'Want to see a blueprint now?'],
+            [None, '<a href="{{ url_for(\'example_blueprint.bar\') }}">Click here!</a>'],
             ['{% endblock %}', None]
         ]
-        pd.DataFrame(foo_page).to_excel(sheet_name='foo', **kwargs)
+    }
 
-    fn_bp = 'example_blueprint.xlsx'
-    with pd.ExcelWriter(fn_bp, engine='xlsxwriter') as writer:
-        kwargs = {
-            'excel_writer': writer,
-            'header': False,
-            'index': False
-        }
-        routes = [['bar', '/bar']]
-        pd.DataFrame(routes).to_excel(sheet_name='#routes', **kwargs)
-
-        example_bp_page = [
+    bp = {
+        '#routes': [
+            ['bar', '/bar']
+        ],
+        'bar': [
             ['{% extends "example_template" %}', None],
             ['{% block content %}', None],
-            [None, 'This page was created using a blueprint'],
+            [None, 'This page was created using a blueprint.'],
             ['{% endblock %}', None, None],
         ]
-        pd.DataFrame(example_bp_page).to_excel(sheet_name='bar', **kwargs)
+    }
+
+    build_workbook_from_dict(data=base, file_name='demo_website.xlsx')
+    build_workbook_from_dict(data=bp, file_name='example_blueprint.xlsx')

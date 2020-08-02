@@ -5,6 +5,7 @@ from typing import Type
 from typing import Optional
 from typing import List
 from typing import Dict
+from typing import Any
 import pandas as pd
 
 
@@ -60,3 +61,14 @@ def load_simple(
         actual = f'{len(df)} column' if len(df) == 1 else f'{len(df)} columns.'
         raise TypeError(f'The sheet {sheet_name} must contain {cols}. However, '
                         f'it contains {actual}.')
+
+
+def build_workbook_from_dict(data: Dict[str, List[List[Any]]], file_name: str):
+    with pd.ExcelWriter(file_name, engine='xlsxwriter') as writer:
+        kwargs = {
+            'excel_writer': writer,
+            'header': False,
+            'index': False
+        }
+        for sheet_name, d in data.items():
+            pd.DataFrame(d).to_excel(sheet_name=sheet_name, **kwargs)
